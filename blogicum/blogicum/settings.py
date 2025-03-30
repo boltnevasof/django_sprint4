@@ -57,7 +57,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'blogicum.urls'
 
-TEMPLATES_DIR = BASE_DIR / "templates"
+TEMPLATES_DIR = BASE_DIR / 'templates'
 
 TEMPLATES = [
     {
@@ -143,3 +143,6 @@ LOGIN_REDIRECT_URL = 'blog:index'
 
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
+
+# AUTH_USER_MODEL = 'blog.User'
+LOGIN_URL = '/auth/login/'

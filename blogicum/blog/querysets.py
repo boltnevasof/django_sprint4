@@ -16,3 +16,11 @@ class PostQuerySet(models.QuerySet):
 
     def with_comment_count(self):
         return self.annotate(comment_count=Count('comments'))
+
+    def full_chain(self):
+        return (
+            self.published()
+            .with_relations()
+            .with_comment_count()
+            .order_by('-pub_date')
+        )

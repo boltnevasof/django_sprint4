@@ -1,8 +1,8 @@
 from django.urls import path
 
-from .views import (add_comment, category_posts, create_post,
-                    delete_comment, delete_post, edit_comment, edit_post,
-                    edit_profile, index, post_detail, profile)
+from .views import (add_comment, category_posts, create_post, delete_comment,
+                    delete_post, edit_comment, edit_post, edit_profile, index,
+                    post_detail, profile)
 
 app_name = 'blog'
 
@@ -30,5 +30,4 @@ urlpatterns = [
     ),
     path('profile/edit/', edit_profile, name='edit_profile'),
     path('profile/<str:username>/', profile, name='profile'),
-    # path('auth/registration/', RegisterView.as_view(), name='registration'),
 ]

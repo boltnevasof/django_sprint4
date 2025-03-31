@@ -1,33 +1,21 @@
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-# from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy
-from django.utils.timezone import now
-from django.views.generic import CreateView
 
 from .forms import CommentForm, PostForm, ProfileEditForm
 from .models import Category, Comment, Post
-
 
 POSTS_PER_PAGE = 10
 
 
 def paginate(queryset, request):
-    paginator = Paginator(queryset, POSTS_PER_PAGE)
-    page_number = request.GET.get('page')
-    return paginator.get_page(page_number)
+    return Paginator(
+        queryset, POSTS_PER_PAGE).get_page(request.GET.get('page'))
 
 
 def index(request):
-    posts = (
-        Post.objects.published()
-        .with_relations()
-        .with_comment_count()
-        .order_by('-pub_date')
-    )
+    posts = Post.objects.full_chain()
     page_obj = paginate(posts, request)
     return render(request, 'blog/index.html', {'page_obj': page_obj})
 
@@ -38,13 +26,8 @@ def category_posts(request, category_slug):
         slug=category_slug,
         is_published=True
     )
-    posts = (
-        Post.objects.published()
-        .with_relations()
-        .with_comment_count()
-        .filter(category=category)
-        .order_by('-pub_date')
-    )
+    posts = Post.objects.full_chain().filter(category=category)
+
     page_obj = paginate(posts, request)
     return render(
         request,
@@ -54,17 +37,10 @@ def category_posts(request, category_slug):
 
 
 def post_detail(request, post_id):
-    # Сначала пробуем получить пост из полной таблицы
-    post = get_object_or_404(Post.objects.with_relations(), id=post_id)
+    post = get_object_or_404(Post, id=post_id)
 
-    # Если пользователь автор доступ разрешён
-    if request.user == post.author:
-        pass
-    else:
-        post = get_object_or_404(
-            Post.objects.published().with_relations(),
-            id=post_id
-        )
+    if request.user != post.author:
+        post = get_object_or_404(Post.objects.published(), id=post_id)
 
     form = CommentForm()
     comments = post.comments.all()
@@ -93,10 +69,7 @@ def profile(request, username):
     if request.user == author:
         posts = author.posts.with_comment_count().order_by('-pub_date')
     else:
-        posts = author.posts.with_comment_count().filter(
-            is_published=True,
-            pub_date__lte=now()
-        ).order_by('-pub_date')
+        posts = author.posts.full_chain()
 
     page_obj = paginate(posts, request)
 
@@ -132,7 +105,6 @@ def edit_post(request, post_id):
         files=request.FILES or None,
         instance=post
     )
-
     if form.is_valid():
         form.save()
         return redirect('blog:post_detail', post_id=post.id)
@@ -191,9 +163,3 @@ def delete_post(request, post_id):
         'blog/create.html',
         {'post': post, 'form': None, 'is_delete': True}
     )
-
-
-class RegisterView(CreateView):
-    form_class = UserCreationForm
-    template_name = 'registration/registration_form.html'
-    success_url = reverse_lazy('login')

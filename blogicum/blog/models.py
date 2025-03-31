@@ -1,12 +1,10 @@
+from django.contrib.auth.models import User
 from django.db import models
 
 from .querysets import PostQuerySet
-from django.contrib.auth.models import User
-
-from django.db import models
 
 
-class BaseModel(models.Model):
+class TimestampedPublishedModel(models.Model):
     """Абстрактная модель с общими полями опубликовано и дата создания."""
 
     is_published = models.BooleanField(
@@ -23,7 +21,7 @@ class BaseModel(models.Model):
         abstract = True
 
 
-class Category(BaseModel):
+class Category(TimestampedPublishedModel):
     title = models.CharField(max_length=256, verbose_name='Заголовок')
     description = models.TextField(verbose_name='Описание')
     slug = models.SlugField(
@@ -42,7 +40,7 @@ class Category(BaseModel):
         return self.title
 
 
-class Location(BaseModel):
+class Location(TimestampedPublishedModel):
     name = models.CharField(max_length=256, verbose_name='Название места')
 
     class Meta:
@@ -54,7 +52,7 @@ class Location(BaseModel):
         return self.name
 
 
-class Post(BaseModel):
+class Post(TimestampedPublishedModel):
     title = models.CharField(max_length=256, verbose_name='Заголовок')
     text = models.TextField(verbose_name='Текст')
     pub_date = models.DateTimeField(

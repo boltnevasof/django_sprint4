@@ -19,17 +19,25 @@ from django.conf.urls import handler404, handler500
 # Импортируем функцию, позволяющую серверу разработки отдавать файлы.
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
-
 # Импорт представления регистрации
-from blog.views import RegisterView
+from django.contrib.auth.forms import UserCreationForm
+from django.urls import include, path, reverse_lazy
+from django.views.generic.edit import CreateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('blog.urls', namespace='blog')),
     path('pages/', include('pages.urls', namespace='pages')),
     path('auth/', include('django.contrib.auth.urls')),
-    path('auth/registration/', RegisterView.as_view(), name='registration'),
+    path(
+        'auth/registration/',
+        CreateView.as_view(
+            form_class=UserCreationForm,
+            template_name='registration/registration_form.html',
+            success_url=reverse_lazy('login')
+        ),
+        name='registration',
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 handler404 = 'pages.views.page_not_found'

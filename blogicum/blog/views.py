@@ -26,7 +26,7 @@ def category_posts(request, category_slug):
         slug=category_slug,
         is_published=True
     )
-    posts = Post.objects.full_chain().filter(category=category)
+    posts = category.posts.full_chain()
 
     page_obj = paginate(posts, request)
     return render(
@@ -55,19 +55,25 @@ def post_detail(request, post_id):
 @login_required
 def create_post(request):
     form = PostForm(request.POST or None, files=request.FILES or None)
-    if form.is_valid():
-        post = form.save(commit=False)
-        post.author = request.user
-        post.save()
-        return redirect('blog:profile', username=request.user.username)
-    return render(request, 'blog/create.html', {'form': form})
+
+    if not form.is_valid():
+        return render(request, 'blog/create.html', {'form': form})
+
+    post = form.save(commit=False)
+    post.author = request.user
+    post.save()
+    return redirect('blog:profile', username=request.user.username)
 
 
 def profile(request, username):
     author = get_object_or_404(User, username=username)
 
     if request.user == author:
-        posts = author.posts.with_comment_count().order_by('-pub_date')
+        posts = (
+            author.posts
+            .with_relations()
+            .with_comment_count()
+        )
     else:
         posts = author.posts.full_chain()
 

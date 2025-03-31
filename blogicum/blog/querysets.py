@@ -15,12 +15,15 @@ class PostQuerySet(models.QuerySet):
         return self.select_related('author', 'location', 'category')
 
     def with_comment_count(self):
-        return self.annotate(comment_count=Count('comments'))
+        return (
+            self.annotate(comment_count=Count('comments'))
+            .order_by(*self.model._meta.ordering)
+        )
 
     def full_chain(self):
         return (
             self.published()
             .with_relations()
             .with_comment_count()
-            .order_by('-pub_date')
+            .order_by(*self.model._meta.ordering)
         )
